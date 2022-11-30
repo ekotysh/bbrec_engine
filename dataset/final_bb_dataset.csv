@@ -1,4 +1,5 @@
 Company Name,Company Size,Open Source,Company Revenue,Bounty Awarded,Severity Rating,Severity Score,Weakness,Report Title,Report Description,URL,Company State,Company Country,Company City,Report Year,Report Month,Report Day,Report Hour,Report Minute
+
 Acronis,1001-5000,0.0,1m-10m,$337.00,Medium,5.45,Violation of Secure Design Principles, Account Takeover on unverified emails in File Sync & Share ,"0xcrypto  submitted a report to Acronis.Jun 24th (2 years ago)Summary
 The name change functionality in File Sync & Share is expected to change the name in File Sync & Share. But the API endpoint used in it also allows changing email to any email without having to verify the email. The login email stays the same but the email within File Sync & Share application changes to the new email without verification. This allows user to pretend to be someone else. If the victim has not verified his email, the bug can allow attacker to take over his File Sync & Share account.
 Steps to Reproduce
@@ -3529,7 +3530,7 @@ Now open https://accountstage.mackeeper.com/ or https://.mackeeper.com/ , these 
 Impact
 The escape function is used, which means a value consisting of special symbols will become three times longer. For example ,,, will turn into %2C. That means an attacker can create a valid link of proper length accepted both by the browser and the server, which however will make the cookie too long.",https://hackerone.com/reports/861521,England,United Kingdom,London,2020,4,28,14,42
 Clario Tech,501-1000,0.0,1m-10m,$300.00,Medium,5.0,Insecure Direct Object Reference (IDOR),IDOR at https://account.mackeeper.com/at/load-reports/profile/<profile_id> leaks information about devices/licenses,m4ll0k  submitted a report to Clario.Jan 25th (3 years ago),https://hackerone.com/reports/783117,England,United Kingdom,London,2020,1,25,10,59
-Clario Tech,501-1000,0.0,1m-10m,$750.00,High,7.8,Privilege Escalation,Local Privilege escalation to root via XPC,nan,https://hackerone.com/reports/750118,England,United Kingdom,London,2019,12,2,22,36
+Clario Tech,501-1000,0.0,1m-10m,$750.00,High,7.8,Privilege Escalation,Local Privilege escalation to root via XPC,No value,https://hackerone.com/reports/750118,England,United Kingdom,London,2019,12,2,22,36
 Clario Tech,501-1000,0.0,1m-10m,$50.00,Low,2.0,Cross-site Scripting (XSS) - Reflected,rXSS on https://mackeeperapp.mackeeper.com/landings/download-blue/,trungnd95  submitted a report to Clario.May 22nd (about 1 year ago),https://hackerone.com/reports/1206020,England,United Kingdom,London,2021,5,22,20,12
 Coda,101-250,0.0,No value,$800.00,High,7.95,Improper Access Control - Generic,Lack or Origin check leads to Cross-Site Websocket Hijacking (CSWSH),fisher  submitted a report to Coda.Apr 11th (4 years ago),https://hackerone.com/reports/535436,California,United States,Palo Alto,2019,4,11,9,12
 Coda,101-250,0.0,No value,$450.00,Medium,5.9,None,Use Github pack with Coda employee github account (search code of Coda's private repositories),"stefanofinding  submitted a report to Coda.Aug 19th (3 years ago)Summary:
@@ -18031,7 +18032,7 @@ https://edoverflow.com/2017/broken-link-hijacking/
 For POC I have attached video
 Impact
 The user will install wrong CSI driver which leads to impersonation attack. The attacker can install Ransomware, trojan etc.1 attachment:F1320056: kubernetes_github_account_hijack_may_30.mp4",https://hackerone.com/reports/1212853,California,United States,San Francisco,2021,5,30,4,22
-Kubernetes,251-500,0.0,200m-1b,$100.00,Low,2.0,Improper Access Control - Generic,Broken Link Hijacking on kubernetes.io Documentation,nan,https://hackerone.com/reports/1331361,California,United States,San Francisco,2021,9,6,17,19
+Kubernetes,251-500,0.0,200m-1b,$100.00,Low,2.0,Improper Access Control - Generic,Broken Link Hijacking on kubernetes.io Documentation,No value,https://hackerone.com/reports/1331361,California,United States,San Francisco,2021,9,6,17,19
 Kubernetes,251-500,0.0,200m-1b,$500.00,Medium,6.6,Authentication Bypass Using an Alternate Path or Channel,Compromise of auth via subset/superset namespace names.,"alex_orange  submitted a report to Kubernetes.Jan 21st (3 years ago)Report Submission Form
 Summary:
 Use of nginx.ingress.kubernetes.io/auth* annotations results in a file named {namespace}-{ingress}.passwd. If user knows the namespace and ingress of an ingress they want to compromise they need to be able to create a namespace that is some subset of {namespace}-{ingress}. Then they create an ingress with the remainder of the name and a passwd file of their choosing, this overwrites the other namespace's passwd file and effectively removes the auth layer provided by nginx ingress.
