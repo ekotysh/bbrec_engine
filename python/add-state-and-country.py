@@ -10,37 +10,89 @@ from py_crunchbase import PyCrunchbase, Collections, Cards
 from bs4 import BeautifulSoup
 import wikipediaapi
 import random
+import googlemaps
+import json
 
 
-CSV_IN_FILENAME = 'final_consistent_data.csv'
+GOOGLE_MAPS_API_KEY = 'AIzaSyCNcDeT5g5lSVIbpVVv6Er-adhphMQsVc0'
+
+RAPID_API_KEY = 'c5d8d54f75msh57dffbfecc7163ap138966jsn3fa1e8848698'
+RAPID_API_URL = 'https://google-maps-geocoding.p.rapidapi.com/geocode/json'
+RAPID_API_HOST = 'google-maps-geocoding.p.rapidapi.com'
+
+CSV_IN_FILENAME = 'final_denan_data.csv'
 CSV_OUT_FILENAME = 'final_geocoded_data.csv'
 
+gmaps = googlemaps.Client(key=GOOGLE_MAPS_API_KEY)
 
-class Company:
-    name = None
-    website = None
-    location_str = None
-    location_obj = None
-    size = None
-    open_source = 0
-    industries = None
-    revenue = None
-    technologies = None
 
-    def __init__(self, name, website):
-        self.name = name
-        self.website = website
+class Location:
+    city = None
+    state = None
+    country = None
+
+    def __init__(self, city, state, country):
+        self.city = city
+        self.state = state
+        self.country = country
 
     def summary(self):
-        print(f"Company name: {self.name}\n"
-              f"\twebsite: {self.website}\n"
-              f"\tlocation_str: {self.location_str}\n"
-              f"\tlocation_obj: {self.location_obj}\n"
-              f"\tsize: {self.size}\n"
-              f"\topen_source: {self.open_source}\n"
-              f"\trevenue: {self.revenue}\n"
-              f"\tindustries: {self.industries}\n"
-              f"\ttechnologies: {self.technologies}\n")
+        print(f"\tcity: {self.city}\n"
+              f"\tstate: {self.state}\n"
+              f"\tcountry: {self.country}\n")
+
+
+def run_gmaps_api(city):
+    # Geocoding an address
+    geocode_result = gmaps.geocode(city)
+    pretty = json.dumps(geocode_result, indent=4)
+    # print(pretty)
+
+    if not geocode_result or len(geocode_result) == 0:
+        loc = Location(city, "", "")
+        print(f"No match for {city}!")
+    else:
+        state = get_state(geocode_result[0]['address_components'])
+        country = get_country(geocode_result[0]['address_components'])
+        loc = Location(city, state, country)
+        # print("Got a new location:")
+        loc.summary()
+
+    return loc
+
+
+def get_state(address_components):
+
+    for component in address_components:
+        if 'administrative_area_level_1' in component['types']:
+            return component['long_name']
+    return ""
+
+
+def get_country(address_components):
+    for component in address_components:
+        if 'country' in component['types']:
+            return component['long_name']
+    return ""
+
+
+def get_google_maps_location_data(city):
+    print(f"Getting location data for {city}")
+
+    # use rapid api (google maps subset) to get supplemental state and country data
+    rapid_query = {"address": city, "language": "en"}
+    rapid_headers = {
+        "X-RapidAPI-Key": RAPID_API_KEY,
+        "X-RapidAPI-Host": RAPID_API_HOST
+    }
+
+    rapid_response = requests.request("GET", RAPID_API_URL, headers=rapid_headers, params=rapid_query)
+    rapid_dict = json.loads(rapid_response.text)
+    print(rapid_dict)
+
+    loc = Location(city, "", "")
+    print("Got:", loc.summary())
+    return loc
 
 
 def get_csv_writeable_row(row):
@@ -49,16 +101,20 @@ def get_csv_writeable_row(row):
     #  'Company City', 'Company State', 'Company Country',
     #  'Bounty Awarded', 'Severity Rating', 'Severity Score', 'Weakness',
     #  'Report Title', 'Report Date', 'Report Description', 'URL']
-
+    """
     return [company.name, company.size, company.open_source, company.revenue, city,
             bounty_report.amount, bounty_report.severity_rating, bounty_report.severity_score,
             bounty_report.weakness, bounty_report.title, bounty_report.date, bounty_report.description, bounty_report.URL]
+    """
+    print("test")
 
 
 def write_csv(data_rows):
-    columns = ['Company Name', 'Company Size', 'Open Source', 'Company Revenue', 'Company Location',
+    columns = ['Company Name', 'Company Size', 'Open Source', 'Company Revenue',
+               'Company Location',
                'Bounty Awarded', 'Severity Rating', 'Severity Score', 'Weakness',
-               'Report Title', 'Report Date', 'Report Description', 'URL']
+               'Report Title', 'Report Date', 'Report Description', 'URL',
+               'Company State', 'Company Country', 'Company City']
 
     with open(CSV_OUT_FILENAME, 'w') as csvfile:
         # creating a csv writer object
@@ -71,97 +127,69 @@ def write_csv(data_rows):
         csvwriter.writerows(data_rows)
 
 
-def validate_final_data():
+def add_state_and_country():
     # Read our CSV into a dataframe
     csv_df = pandas.read_csv(CSV_IN_FILENAME, parse_dates=['Report Date'])
     print(csv_df)
 
-    # spot check all the unique values for each of these columns
-    companies = set()
-    sizes = set()
-    revenues = set()
-    locations = set()
-    companies_to_location = {}
-    companies_to_sizes = {}
-    companies_to_revenues = {}
-    severity_ratings = set()
-    severity_scores = set()
-    open_source_vals = set()
-
+    # cache retrieved geocoded locations
+    locations = {}
     data_rows = [[]]
     total_rows = 0
+    no_value = 'No value'
 
     for index, row in csv_df.iterrows():
-        company_name = row['Company Name']
-        size = row['Company Size']
-        revenue = row['Company Revenue']
-        location = row['Company Location']
-        rating = row['Severity Rating']
-        score = row['Severity Score']
-        open_source_val = row['Open Source']
-
-        companies.add(company_name)
-        sizes.add(size)
-        revenues.add(revenue)
-        locations.add(location)
-        severity_ratings.add(rating)
-        if not math.isnan(score):
-            severity_scores.add(score)
-        open_source_vals.add(open_source_val)
-
-        # collect locations for each company
-        if company_name not in companies_to_location.keys():
-            companies_to_location[company_name] = set()
-            companies_to_location[company_name].add(location)
+        city = row['Company Location']
+        loc = None
+        if city in locations.keys():
+            loc = locations[city]
         else:
-            companies_to_location[company_name].add(location)
+            # invoke the api
+            loc = run_gmaps_api(city)
+            locations[city] = loc
 
-        # collect sizes for each company
-        if company_name not in companies_to_sizes.keys():
-            companies_to_sizes[company_name] = set()
-            companies_to_sizes[company_name].add(size)
-        else:
-            companies_to_sizes[company_name].add(size)
+        row_copy = row.copy()
 
-        # collect revenues for each company
-        if company_name not in companies_to_revenues.keys():
-            companies_to_revenues[company_name] = set()
-            companies_to_revenues[company_name].add(revenue)
+        # if country exists, but state is missing, set state to city
+        if (loc.country and loc.country != "") and (loc.state == "" or loc.state is None):
+            row_copy['Company State'] = city
         else:
-            companies_to_revenues[company_name].add(revenue)
+            row_copy['Company State'] = loc.state
+
+        row_copy['Company Country'] = loc.country
+        row_copy['Company City'] = city
+
+        # override some exceptions that gmaps didn't handle properly
+        if city == 'Burlington':
+            row_copy['Company State'] = 'Massachusetts'
+            row_copy['Company Country'] = 'United States'
+        elif city == no_value:
+            row_copy['Company State'] = no_value
+            row_copy['Company Country'] = no_value
+        elif city == 'Remote':
+            row_copy['Company State'] = 'Remote'
+            row_copy['Company Country'] = 'Remote'
+        elif city == 'Dover':
+            row_copy['Company State'] = 'Delaware'
+            row_copy['Company Country'] = 'United States'
+        elif city == 'Owen':
+            row_copy['Company City'] = 'Houston'
+            row_copy['Company State'] = 'Texas'
+            row_copy['Company Country'] = 'United States'
+
+        data_rows.append(row_copy)
 
         total_rows += 1
 
-    # write_csv(data_rows)
+    write_csv(data_rows)
 
     print(f"Done. Total records: {total_rows}")
 
-    # check for inconsistent locations for each company
-    for c in companies_to_location.keys():
-        if len(companies_to_location[c]) > 1:
-            print(f"Company {c} has multiple locs: {companies_to_location[c]}")
-
-    # check for inconsistent sizes for each company
-    for c in companies_to_sizes.keys():
-        if len(companies_to_sizes[c]) > 1:
-            print(f"Company {c} has multiple sizes: {companies_to_sizes[c]}")
-
-    # check for inconsistent revenues for each company
-    for c in companies_to_revenues.keys():
-        if len(companies_to_revenues[c]) > 1:
-            print(f"Company {c} has multiple revenues: {companies_to_revenues[c]}")
-
-    print("All Companies:", companies)
-    print("All Sizes:", sizes)
-    print("All revenues:", revenues)
     print("All locations:", locations)
-    print("All severity_ratings:", severity_ratings)
-    print("All severity_scores:", severity_scores)
-    print("All open_source_vals:", open_source_vals)
 
     print("Done.")
 
 
 if __name__ == '__main__':
-    validate_final_data()
+    add_state_and_country()
 
