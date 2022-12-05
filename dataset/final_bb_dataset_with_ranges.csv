@@ -37891,7 +37891,7 @@ Code 976 BytesWrap lines Copy Download1bundle exec rake gitlab:env:info RAILS_EN
 35GitLab Shell path:		/home/u3mur4/Hack/gitlab/gitlab-development-kit/gitlab-shell
 36Git:		/usr/bin/git
 Impact
-stealing the CI_JOB_TOKEN of any user (access the user private repositories, member only repositories and registry, etc...)",No value,England,United Kingdom,London,2020,6,9,15,53,No value
+stealing the CI_JOB_TOKEN of any user (access the user private repositories, member only repositories and registry, etc...)",No value,Texas,United States,Austin,2020,6,9,15,53,No value
 No value,1001-5000,0.0,No value,No value,Low,2.0,Business Logic Errors,An attacker can run pipeline jobs as arbitrary user,"hudmi  submitted a report to Basecamp.Aug 31st (4 years ago)Basecamp attachments are stored in the bc3_production_blobs bucket in the root directory and can be served with text/html content-type. 
 https://storage.googleapis.com/bc3_production_blobs/*key*?GoogleAccessId=bc3-production-storage%40bc3-production.iam.gserviceaccount.com&Expires=1535826443&Signature=*sign*&response-content-type=text/html
 So with AppCache+CookieBombing trick an attacker can upload html file and if the user visit url of this file then all further uploads to this bucket and downloads from it will be hijacked by an attacker.
@@ -37926,4 +37926,4 @@ PoC
 Go to http://████████/bc3attach and then try to open any direct link of bc3_production_blobs bucket. You will see alert popup with full url of this file.
 Refer to the video.
 Impact
-Direct links to any attachments can be hijacked and confedential files can be compromised1 attachment:F340718: capture-132.avi",No value,England,United Kingdom,London,2020,6,9,15,53,No value
+Direct links to any attachments can be hijacked and confedential files can be compromised1 attachment:F340718: capture-132.avi",No value,Texas,United States,Austin,2020,6,9,15,53,No value
