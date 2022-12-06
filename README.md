@@ -1,7 +1,7 @@
 # bbrec_engine
 # Summary
 ---
-In this project, I created an ML algorithm that guesses the bug bounty price range for a given vulnerability. 
+In this project, I want to create an ML algorithm that guesses the bug bounty price range for a given vulnerability. 
 
 **Problem:** Currently, there is a big challenge in the field of Security Disclosure in determining how much a bug bounty should cost or how much a researcher should get paid for their responsible disclosure. 
 
@@ -107,6 +107,8 @@ This significantly improved the accuracy of decision trees to over 50%.
 
 I tried using both, <b>tf-idf</b> and <b>count</b> vectorizers on description to see how they perform. While they both transform text into numeric form useful for machine learning models, the CountVectorizer simply produces the frequency of each token with respect to the index in the vocabulary. However, the **TfidfVectorizer hints at the overall originality** of the word by counting how many times it appears in the document vs the number of documents that token appears in.
 
+I also tried experimenting with various <b>ngram combinations</b>, such as (1,1), (1,2) and (2,2), however as soon as I deviated away from 1 and went to biwords, it started losing important words and overfitting on biwords more.
+
 I visualized the decision tree diagrams at multiple maxdepths for both vectorizers and found that in the case of using plain CountVectorizer, the tree tends to overfit right away, as I see some leafs containing company-specific terms from description like "dropbox" for example. Using tfidf produced much more original results and slightly better accuracy (by ~0.05).
 
 **Decision Tree Tuning:**
@@ -144,6 +146,8 @@ This performs column vectorization transformation over Description, while allowi
 
 - Get more data (5000-10000 records)
 - Look into joining `Weakness` and `Title` into the Pipline, along with Description
-- More detailed tuning with Random Forest classifier
+- Analyze `feature_importances_` of decision tree
+- Use DecisionTreeRegressor to optimize decision tree
 - Try post-pruning techniques instead of pre-pruning
+- More detailed tuning with Random Forest classifier, to combat overfitting with different tree ensemble. 
 
